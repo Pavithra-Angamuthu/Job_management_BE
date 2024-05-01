@@ -24,21 +24,21 @@ const createJobOpening = async (req, res) => {
 //Update JOb Opening
 const updateJobOpening = async (req, res) => {
   try {
-  
-      let payload = {
-        ...req.body,
-        updated_at: new Date(),
-      };
+    let payload = {
+      ...req.body,
+      updated_at: new Date(),
+    };
 
-     
-      const jobopeningupdate = await jobopening.updateOne(
-        { _id: req.body._id },
-        payload
-      ).exec();
-    
-console.log("-> jobopeningupdate ", jobopeningupdate)
+    const jobopeningupdate = await jobopening
+      .updateOne({ _id: req.body._id }, payload)
+      .exec();
+
     if (jobopeningupdate) {
-      return res.send(response("Job Opening Updated Successfully"), jobopeningupdate, true);
+      return res.send(
+        response("Job Opening Updated Successfully"),
+        jobopeningupdate,
+        true
+      );
     } else {
       return res
         .status(400)
@@ -73,6 +73,7 @@ const getJobOpeningBasedonId = async (req, res) => {
           preserveNullAndEmptyArrays: true,
         },
       },
+      { $sort: { created_at: -1 } },
     ]);
 
     if (data) return res.send(response("Job Opening details", data));
@@ -88,9 +89,54 @@ const getJobOpeningBasedonId = async (req, res) => {
 //Get Opneing List basedon emp id
 const getJobOpeningBasedOnEmpId = async (req, res) => {
   try {
-    const query = [];
+    const isRemote = req.query.is_remote === "true";
+    const query = [
+      {
+        $match: {
+          job_title: {
+            $regex: `^${req.query.title}`,
+            $options: "i",
+          },
+
+          is_remote: isRemote,
+        },
+      },
+      { $sort: { created_at: -1 } },
+    ];
+    if (req.query.department !== "undefined") {
+      query.push({
+        $match: {
+          department: req.query.department,
+        },
+      });
+    }
+
+    if (req.query.experience !== "undefined") {
+      query.push({
+        $match: {
+          experience: req.query.experience,
+        },
+      });
+    }
+
+    if (req.query.specialization !== "undefined") {
+      query.push({
+        $match: {
+          specialization: req.query.specialization,
+        },
+      });
+    }
+
+    if (req.query.location !== "undefined") {
+      query.push({
+        $match: {
+          location: { $in: [req.query.location] },
+        },
+      });
+    }
+
     if (req.query.id) {
-        query.push({
+      query.push({
         $match: {
           emp_id: mongoose.Types.ObjectId(req.query.id),
           //   status: true,
@@ -98,8 +144,16 @@ const getJobOpeningBasedOnEmpId = async (req, res) => {
       });
     }
 
+    const count = await jobopening.countDocuments(query);
+
+    if (req.query.skip) {
+      query.push({
+        $skip: parseInt(req.query.skip ? req.query.skip : 0),
+      });
+    }
+
     if (req.query.limit) {
-        query.push({
+      query.push({
         $limit: parseInt(
           req.query.limit
             ? req.query.limit == 0
@@ -110,20 +164,14 @@ const getJobOpeningBasedOnEmpId = async (req, res) => {
       });
     }
 
-    if (req.query.skip) {
-        query.push({
-        $skip: parseInt(req.query.skip ? req.query.skip : 0),
-      });
-    }
-
     let data = {};
-    if(query.length === 0){
-        data = await jobopening.find({status: true});
-    }else{
-         data = await jobopening.aggregate(query);
+    if (query.length === 0) {
+      data = await jobopening.find({ status: true });
+    } else {
+      data = await jobopening.aggregate(query);
     }
 
-    if (data) return res.send(response("Job opening list", data));
+    if (data) return res.send(response("Job opening list", { count, data }));
     else
       return res
         .status(400)
@@ -133,61 +181,108 @@ const getJobOpeningBasedOnEmpId = async (req, res) => {
   }
 };
 
-
 //Get Opneing List
 const getJobOpening = async (req, res) => {
-    try {
-      const query = [{
-        $lookup:
-          {
-            from: "jobapplies",
-            localField: "_id",
-            foreignField: "job_opening_id",
-            as: "result",
+  try {
+    const isRemote = req.query.is_remote === "true";
+    const query = [
+        {
+            $match: {
+              job_title: {
+                $regex: `^${req.query.title}`,
+                $options: "i",
+              },
+    
+              is_remote: isRemote,
+            },
           },
-      },];
-     
-  
-      if (req.query.limit) {
-          query.push({
-          $limit: parseInt(
-            req.query.limit
-              ? req.query.limit == 0
-                ? 999999
-                : req.query.limit
-              : 999999
-          ),
+          { $sort: { created_at: -1 } },
+      {
+        $lookup: {
+          from: "jobapplies",
+          localField: "_id",
+          foreignField: "job_opening_id",
+          as: "result",
+        },
+      },
+      { $sort: { created_at: -1 } },
+    ];
+
+
+    if (req.query.department !== "undefined") {
+        query.push({
+          $match: {
+            department: req.query.department,
+          },
         });
       }
   
+      if (req.query.experience !== "undefined") {
+        query.push({
+          $match: {
+            experience: req.query.experience,
+          },
+        });
+      }
+  
+      if (req.query.specialization !== "undefined") {
+        query.push({
+          $match: {
+            specialization: req.query.specialization,
+          },
+        });
+      }
+  
+      if (req.query.location !== "undefined") {
+        query.push({
+          $match: {
+            location: { $in: [req.query.location] },
+          },
+        });
+      }
+      const count = await jobopening.countDocuments(query);
+
       if (req.query.skip) {
-          query.push({
+        query.push({
           $skip: parseInt(req.query.skip ? req.query.skip : 0),
         });
       }
   
-      let data = {};
-      if(query.length === 0){
-          data = await jobopening.find({status: true});
-      }else{
-           data = await jobopening.aggregate(query);
-      }
-  
-      if (data) return res.send(response("Job opening list", data));
-      else
-        return res
-          .status(400)
-          .send(response("Failed to get the List", {}, false, 400));
-    } catch (error) {
-      return res.status(400).send(response(error.message, {}, false, 400));
+    if (req.query.limit) {
+      query.push({
+        $limit: parseInt(
+          req.query.limit
+            ? req.query.limit == 0
+              ? 999999
+              : req.query.limit
+            : 999999
+        ),
+      });
     }
-  };
 
+    
+
+    let data = {};
+    if (query.length === 0) {
+      data = await jobopening.find({ status: true });
+    } else {
+      data = await jobopening.aggregate(query);
+    }
+
+    if (data) return res.send(response("Job opening list",{count,data}));
+    else
+      return res
+        .status(400)
+        .send(response("Failed to get the List", {}, false, 400));
+  } catch (error) {
+    return res.status(400).send(response(error.message, {}, false, 400));
+  }
+};
 
 export {
   createJobOpening,
   updateJobOpening,
   getJobOpeningBasedonId,
   getJobOpeningBasedOnEmpId,
-  getJobOpening
+  getJobOpening,
 };
