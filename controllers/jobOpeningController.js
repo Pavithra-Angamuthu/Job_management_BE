@@ -24,20 +24,21 @@ const createJobOpening = async (req, res) => {
 //Update JOb Opening
 const updateJobOpening = async (req, res) => {
   try {
-    if (req.query.id) {
+  
       let payload = {
         ...req.body,
         updated_at: new Date(),
       };
 
-      let jobopeningupdate = await jobopening.updateOne(
-        { _id: req.query.id },
+     
+      const jobopeningupdate = await jobopening.updateOne(
+        { _id: req.body._id },
         payload
-      );
-    }
-
+      ).exec();
+    
+console.log("-> jobopeningupdate ", jobopeningupdate)
     if (jobopeningupdate) {
-      return res.send(response("Job Opening Updated Successfully"), data, true);
+      return res.send(response("Job Opening Updated Successfully"), jobopeningupdate, true);
     } else {
       return res
         .status(400)

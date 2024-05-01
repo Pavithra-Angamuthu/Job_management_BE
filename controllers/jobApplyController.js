@@ -1,6 +1,6 @@
 import response from "../utils/response.js";
-import { jobopening } from "../model/jobOpeningSchema.js";
 import { jobapply } from "../model/jobApplySchema.js";
+import mongoose from "mongoose";
 
 //Job Apply Create
 const createJobApply = async (req, res) => {
@@ -26,30 +26,26 @@ const getJobApplyBasedOnOpeningId = async (req, res) => {
   try {
     const query = [
       {
-        $lookup: {
-          from: "jobseeker",
-          localField: "_id",
-          foreignField: "job_seeker_id",
-          as: "jobseeker",
-        },
-      },
-
-      {
-        $unwind: {
-          path: "$jobseeker",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-    ];
-
-    if (req.query.id) {
-      data.shift({
         $match: {
           job_opening_id: mongoose.Types.ObjectId(req.query.id),
           //   status: true,
         },
-      });
-    }
+      },
+      {
+        $lookup: {
+          from: "jobopenings",
+          localField: "job_opening_id",
+          foreignField: "_id",
+          as: "jobopenings",
+        },
+      },
+      {
+        $unwind: {
+          path: "$jobopenings",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+    ];
 
     if (req.query.limit) {
       data.push({
@@ -69,7 +65,7 @@ const getJobApplyBasedOnOpeningId = async (req, res) => {
       });
     }
 
-    const data = await jobopening.aggregate(query);
+    const data = await jobapply.aggregate(query);
 
     if (data) return res.send(response("Job apply list", data));
     else
@@ -81,7 +77,4 @@ const getJobApplyBasedOnOpeningId = async (req, res) => {
   }
 };
 
-export {
-    createJobApply,
-  getJobApplyBasedOnOpeningId,
-};
+export { createJobApply, getJobApplyBasedOnOpeningId };
