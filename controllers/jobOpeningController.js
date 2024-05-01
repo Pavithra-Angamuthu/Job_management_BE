@@ -73,6 +73,14 @@ const getJobOpeningBasedonId = async (req, res) => {
           preserveNullAndEmptyArrays: true,
         },
       },
+      {
+        $lookup: {
+          from: "jobapplies",
+          localField: "_id",
+          foreignField: "job_opening_id",
+          as: "result",
+        },
+      },
       { $sort: { created_at: -1 } },
     ]);
 
@@ -192,6 +200,7 @@ const getJobOpening = async (req, res) => {
                 $regex: `^${req.query.title}`,
                 $options: "i",
               },
+              status: true,
     
               is_remote: isRemote,
             },

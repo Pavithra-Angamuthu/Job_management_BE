@@ -28,11 +28,6 @@ const getJobApplyBasedOnOpeningId = async (req, res) => {
       {
         $match: {
           job_opening_id: mongoose.Types.ObjectId(req.query.id),
-          //   status: true,
-          job_title: {
-            $regex: `^${req.query.title}`, 
-            $options: "i" 
-          }
         },
       },
       { $sort: { created_at: -1 } },
