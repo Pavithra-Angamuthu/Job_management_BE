@@ -23,7 +23,6 @@ const verifyToken = (req, res, next) => {
 };
 
 const getToken = (user) => {
-    console.log("-->user : ", user, process.env.TOKEN_SECRET_KEY)
     const token = jwt.sign({ user: user }, process.env.TOKEN_SECRET_KEY || "job_management" ,
         {
             expiresIn: '7d'
