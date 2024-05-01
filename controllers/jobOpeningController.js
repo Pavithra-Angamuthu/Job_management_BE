@@ -84,7 +84,7 @@ const getJobOpeningBasedonId = async (req, res) => {
   }
 };
 
-//Get Opneing List
+//Get Opneing List basedon emp id
 const getJobOpeningBasedOnEmpId = async (req, res) => {
   try {
     const query = [];
@@ -132,9 +132,61 @@ const getJobOpeningBasedOnEmpId = async (req, res) => {
   }
 };
 
+
+//Get Opneing List
+const getJobOpening = async (req, res) => {
+    try {
+      const query = [{
+        $lookup:
+          {
+            from: "jobapplies",
+            localField: "_id",
+            foreignField: "job_opening_id",
+            as: "result",
+          },
+      },];
+     
+  
+      if (req.query.limit) {
+          query.push({
+          $limit: parseInt(
+            req.query.limit
+              ? req.query.limit == 0
+                ? 999999
+                : req.query.limit
+              : 999999
+          ),
+        });
+      }
+  
+      if (req.query.skip) {
+          query.push({
+          $skip: parseInt(req.query.skip ? req.query.skip : 0),
+        });
+      }
+  
+      let data = {};
+      if(query.length === 0){
+          data = await jobopening.find({status: true});
+      }else{
+           data = await jobopening.aggregate(query);
+      }
+  
+      if (data) return res.send(response("Job opening list", data));
+      else
+        return res
+          .status(400)
+          .send(response("Failed to get the List", {}, false, 400));
+    } catch (error) {
+      return res.status(400).send(response(error.message, {}, false, 400));
+    }
+  };
+
+
 export {
   createJobOpening,
   updateJobOpening,
   getJobOpeningBasedonId,
   getJobOpeningBasedOnEmpId,
+  getJobOpening
 };
