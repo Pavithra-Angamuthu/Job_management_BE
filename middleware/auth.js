@@ -10,7 +10,7 @@ const verifyToken = (req, res, next) => {
     }
     try {
         const decoded = jwt.verify(token, process.env.TOKEN_SECRET_KEY || "job_management");
-        if (decoded?.["user"]?.[0]?.["phone_no"] || decoded?.["user"]?.["email"]) {
+        if (decoded?.["user"]?.[0]?.["phone_no"] || decoded?.["user"]?.["email"] ||  decoded?.["user"]?.["business_email"]) {
             return next();
         }
         else {
