@@ -30,7 +30,7 @@ mongoose
 
 app.use("/api/employer",  employerRoute);
 app.use("/api/jobseeker", jobSeekerRoute);
-app.use("/api/opening",verifyToken, jobOpeningRoute);
+app.use("/api/opening", jobOpeningRoute);
 app.use("/api/apply",verifyToken, jobApplyRoute)
 
 app.get("/", (req, res) => {

@@ -160,14 +160,10 @@ const getJobOpeningBasedOnEmpId = async (req, res) => {
       });
     }
 
-    if (req.query.limit) {
+    if (req.query.limit !== 'undefined') {
       query.push({
         $limit: parseInt(
           req.query.limit
-            ? req.query.limit == 0
-              ? 999999
-              : req.query.limit
-            : 999999
         ),
       });
     }
@@ -257,14 +253,10 @@ const getJobOpening = async (req, res) => {
         });
       }
   
-    if (req.query.limit) {
+    if (req.query.limit !== 'undefined') {
       query.push({
         $limit: parseInt(
           req.query.limit
-            ? req.query.limit == 0
-              ? 999999
-              : req.query.limit
-            : 999999
         ),
       });
     }

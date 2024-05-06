@@ -47,21 +47,15 @@ const getJobApplyBasedOnOpeningId = async (req, res) => {
       },
     ];
 
-    if (req.query.limit) {
-      data.push({
-        $limit: parseInt(
-          req.query.limit
-            ? req.query.limit == 0
-              ? 999999
-              : req.query.limit
-            : 999999
-        ),
+    if (req.query.skip) {
+      query.push({
+        $skip: parseInt(req.query.skip ? req.query.skip : 0),
       });
     }
 
-    if (req.query.skip) {
-      data.push({
-        $skip: parseInt(req.query.skip ? req.query.skip : 0),
+    if (req.query.limit !== "undefined" && req.query.limit) {
+      query.push({
+        $limit: parseInt(req.query.limit),
       });
     }
 
